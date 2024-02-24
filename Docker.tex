@@ -64,7 +64,7 @@ So VM is based on 3 layers
 \begin{itemize}
     \item The hardware: It is where the VM is running.
     \item The kernel: It is the layer that is between the hardware and the VM.It's the layer that allows the VM to run on the hardware.
-    \item The apps: Not much to explain, this are the applications we use when we work with the VM.
+    \item The apps: Not much to explain, this are the applications we use when we work with the VM\\
 \end{itemize}
 So when we talk about VM we virtualise The apps and the kernel. In this case the kernel could be a linux distribution, windows iso or mac os iso. 
 And this makes that the images of the VM's size up to Gigabytes. In docker case we only virtualize the apps. So with the kernel docker uses
@@ -72,7 +72,7 @@ the host kernel. So if you are executing a container in a linux host, the contai
 Same happen with windows and MacOs. 
 
 
-\section*{Basic commands}
+\section*{Images commands}
 Let's start with the basic commands of docker. First to run the commands you need to run docker desktop running. Also to check if 
 you have docker installed you can run the command
 \begin{lstlisting}
@@ -108,6 +108,134 @@ But if you use the command docker pull python you will download the latest versi
 
 And in the process of the pull you will see graphically how the layers of the image are being downloaded and this will help to understand that concepts.
 
+Now in the list of images you will see the image that you just downloaded. This list have the name of repository where the image is, the tag, the image id, 
+the created date and the size of the image. To know what images you can pull you can go to the docker hub and search for the image that you want to pull.
+
+If you have a problem with the image that you just downloaded you can try fixing it with this command 
+\begin{lstlisting}{language=bash}
+    docker pull --platform linux/x86_64 <image-name> 
+\end{lstlisting}
+
+Now we see the command we need to run to delete the images that we don't need anymore. To do that we can run the command
+\begin{lstlisting}{language=bash}
+    docker image rm <image-id>
+\end{lstlisting}
+or 
+\begin{lstlisting}{language=bash}
+    docker image rm <image-name>:<tag> 
+\end{lstlisting}
+
+\section*{Containers commands}
+First, to mount a container we need a image. So you can download the image you want. Then to create
+a container you can run the command
+\begin{lstlisting}{language=bash}
+    docker create <image-name>
+\end{lstlisting}
+
+and this will return a container id, save it because you will need it to run the container.
+
+Now to run the container that you create run the command
+\begin{lstlisting}{language=bash}
+    docker start <container-id>
+\end{lstlisting}
+and this will return the container id again. And how do i do to check if the container is running? You can run the command
+\begin{lstlisting}{language=bash}
+    docker ps
+\end{lstlisting}
+
+now this will return a table with valuable information. The first column is the container id,
+the second column is the image name, the third column is the command that the container is running, 
+the fourth column is the creation date, the fifth column is the status of the container, 
+the sixth column is the ports that the container is using and the last column is the name of the container.
+
+Now to stop the container you can run the command
+\begin{lstlisting}{language=bash}
+    docker stop <container-id>
+\end{lstlisting} 
+this will return the container id again and you can check if the container is stopped with the command
+\begin{lstlisting}{language=bash}
+    docker ps 
+\end{lstlisting}
+
+To show all the containers that you have in your local machine you can run the command
+\begin{lstlisting}{language=bash}
+    docker ps -a
+\end{lstlisting}
+
+to delete a container you can run the command
+\begin{lstlisting}{language=bash}
+    docker rm <container-id>
+\end{lstlisting}
+
+Now if you want to assign a name to the container you can run the command
+\begin{lstlisting}{language=bash}
+    docker run --name <container-name> <image-name>
+\end{lstlisting}
+
+ and with this you can run, stop and remove the container by the name that you assigned. You can do the 3 actions with 
+ the same commands that we saw before just thata change de <container-id> for the <container-name>
+
+ And now we can't use this container because we don't have any port open.So we need to indicate to docker that we want to 
+ open a port but this port we need to map it to a port of our container. Because we can access to the container's port. 
+ But first let's explain what is Port Mapping 
+     \subsection*{Port Mapping}
+        The concept of port mapping is essential to understand when working with Docker. Basically is the process of 
+        forwarding network traffic from one network port to another. Imagine that we have and application that is running in
+        the port 3000 and we have a container that is running in the port 27017. We can map the port 3000 of our local machine
+        to the port 27017 of the container. So when we access to the port 3000 of our local machine we are accessing to the 
+        port 27017 and now we implemented the port mapping.
+    \\
+
+So to map a port you can run the command
+\begin{lstlisting}{language=bash}
+    docker run -p<local-port>:<container-port> <image-name>
+\end{lstlisting}
+
+we can also map the port to a specific ip address. To do that you can run the command
+\begin{lstlisting}{language=bash}
+    docker run -p<ip-address>:<local-port>:<container-port> <image-name>
+\end{lstlisting}
+ also we can let docker decide the port that we are going to use. To do that you can run the command
+\begin{lstlisting}{language=bash}
+    docker run -p<container-port> <image-name>
+\end{lstlisting}
+
+And now we need to now if the container is being executed in the right way. To do that you can run the command
+\begin{lstlisting}{language=bash}
+    docker logs <container-id>
+\end{lstlisting}
+ ando to keep tracking the logs we can run the command
+\begin{lstlisting}{language=bash}
+    docker logs --follow <container-id>
+\end{lstlisting}
+and with this command we can see the logs in real time. To exit of those logs you can press ctrl + c.
+
+Now we are going to learn a new comman, that will be a combination of pull, create and start. This command is 
+\begin{lstlisting}{language=bash}
+    docker run <image-name>
+\end{lstlisting}
+
+This command will pull the image if it's not in your local machine, then it will create the container and 
+then it will start the container. And this command will show the logs of the container in real time and you can 
+detained with the command ctrl + c but this will detained all the container. But if you want to run the container 
+in the background you can run the command
+\begin{lstlisting}{language=bash}
+    docker run -d <image-name>
+\end{lstlisting}
+
+and this will return the container id.  Also we can merge all the commands that we saw before in one command.For example
+\begin{lstlisting}{language=bash}
+    docker run -d -p<local-port>:<container-port> --name <container-name> <image-name>
+\end{lstlisting}
+
+So as you can see we can merge all the commands in one command. And this will make the process of creating and running a container
+It's important to know that every time you run a container you are creating a new container. 
+
+\section*{Conecting to a container}
+And now we are going to learn how to connect to a container.
+\section*{Docker Compose}
+\section*{Volumes}
+\section*{Environments and Hot Reload}
 
 
 \section*{Conclusion}
