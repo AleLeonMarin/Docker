@@ -1,0 +1,117 @@
+\documentclass{article}
+\usepackage{listings}
+
+\title{Docker Documentation}
+\author{Alejandro Leon Marin}
+
+\begin{document}
+
+\maketitle
+\newpage
+\begin{center}
+    \section*{Introduction}
+        In this document we will cover the basics of Docker, a containerization platform 
+        that allows you to run applications in a controlled environment. 
+        Also it will help us to understand the basic concepts of Docker and how to use it. 
+        We'll cover the definition of containers, images, and the basic commands to 
+        run docker containers.
+
+\end{center}
+
+\newpage
+\section*{What is Docker?}
+
+Docker is a versatile platform designed for developing, packaging, and running applications within a controlled environment. 
+This platform utilizes containerization, allowing applications to run efficiently on various systems while minimizing resource usage. 
+Developers widely adopt Docker due to its ability to streamline the installation and execution of applications.
+
+A container, in this context, serves as a packaged unit comprising an application and its dependencies, such as libraries and system tools. 
+It functions as an isolated environment, ensuring that the application runs consistently across different systems with Docker installed. 
+Consider a container as a virtual box containing your application's code, language-specific components (e.g., HTML and Node.js), 
+and even environment variables within a designated directory like ".env."
+
+Containers can be easily transported between systems, facilitating seamless sharing among developers and operations teams. 
+Docker containers are stored in repositories, which are akin to GitHub but specifically for containers. There are two types of repositories:
+
+1. Public repositories: Open to the public, allowing anyone to view the containers they contain, with Docker Hub being a prominent example.
+2. Private repositories: Access to these repositories is restricted, and only individuals with authorized access can view the containers stored 
+within.
+
+Docker Hub provides a wide array of containers for databases, web servers, and other tools that developers can readily incorporate into their 
+projects. When you run a container, you are essentially launching an instance of an image. This approach becomes particularly advantageous in 
+collaborative projects, where team members may have different software versions installed. Docker simplifies this by enabling users to run an 
+image, based on a specific Linux distribution, with the necessary dependencies—eliminating the need to install them individually.
+
+In summary, Docker facilitates a more efficient and standardized development and deployment process by encapsulating applications and 
+their dependencies into containers, which can be easily shared and executed across diverse environments.
+
+\section*{What is an image?}
+So an image is a file that contains all the necessary files to run a container. It includes the code, the runtime, 
+the libraries, the environment variables, and the configuration files and the container makes that all of this files run in a controlled 
+environment. So the image is the file that you can share with other developers and with the operations team. So what's a container?
+
+
+\section*{What is a container?}
+
+A container are layers trough layers of images. Where the lowest layer is most of the time a linux system distribution. The most used is called Alpine
+linux, this is because it's a very small distribution and it's very fast to download. So over that layer we will have many layers of images until we get 
+to the layer of our application. So the magic of the containers are that they are very small talking in terms memory space if we compare them 
+with actual virtual machines where the vm's can take up Gigabytes of memory and the container can take MegaBytes of memory. And why virtualization? 
+
+\section*{Why virtualization?}
+Docker is a way of virtualization. So let's talk about virtualization. Let's take VM as Virtual Machine. 
+So VM is based on 3 layers 
+\begin{itemize}
+    \item The hardware: It is where the VM is running.
+    \item The kernel: It is the layer that is between the hardware and the VM.It's the layer that allows the VM to run on the hardware.
+    \item The apps: Not much to explain, this are the applications we use when we work with the VM.
+\end{itemize}
+So when we talk about VM we virtualise The apps and the kernel. In this case the kernel could be a linux distribution, windows iso or mac os iso. 
+And this makes that the images of the VM's size up to Gigabytes. In docker case we only virtualize the apps. So with the kernel docker uses
+the host kernel. So if you are executing a container in a linux host, the container will use the linux kernel of the host. 
+Same happen with windows and MacOs. 
+
+
+\section*{Basic commands}
+Let's start with the basic commands of docker. First to run the commands you need to run docker desktop running. Also to check if 
+you have docker installed you can run the command
+\begin{lstlisting}
+    docker --version
+\end{lstlisting}
+
+Also docker recommend to run the hello-world image to check if the installation is correct. To do that you can run the command
+\begin{lstlisting}{language=bash}
+    docker run hello-world
+\end{lstlisting}
+ 
+This command will download the hello-world image and run it. If everything is correct you will see a message that says that the installation 
+is correct.
+
+Now our first command will be to list all the images that we have in our local machine. To do that we can run the command
+\begin{lstlisting}{language=bash}
+    docker images
+\end{lstlisting}
+
+Now to download our image we can run the command
+\begin{lstlisting}{language=bash}
+    docker pull <image-name>
+\end{lstlisting}
+
+In this case <image-name> could python for example. This will download the python image from the docker hub or Node, or mysql, or Postgres, etc.
+Another thing to have in consideration is that you can pull a image with a specific version. For example if you want to pull the python 3.8.5 
+you can run the command
+\begin{lstlisting}{language=bash}
+    docker pull python:3.8.5
+\end{lstlisting}
+
+But if you use the command docker pull python you will download the latest version of python.
+
+And in the process of the pull you will see graphically how the layers of the image are being downloaded and this will help to understand that concepts.
+
+
+
+\section*{Conclusion}
+
+
+
+\end{document}
