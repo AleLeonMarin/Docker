@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{listings}
+\usepackage{hyperref}
 
 \title{Docker Documentation}
 \author{Alejandro Leon Marin}
@@ -232,13 +233,287 @@ So as you can see we can merge all the commands in one command. And this will ma
 It's important to know that every time you run a container you are creating a new container. 
 
 \section*{Conecting to a container}
-And now we are going to learn how to connect to a container.
+And now we are going to learn how to connect to a container. So first we need to go Docker hub and search for the 
+image that we want to run. So why go to docker hub and search for the image? Because in the documentation of the image
+we have some paremeters that we need to configure to run the container and access to it. So in this case and many of the 
+times when we put in a container a Database we need to configure a user and a password. So we go to the documentation of
+the image and we search for the paremeters that we need to configure. All of the containers need a different configuration
+so it's important to go to the documentation of the image. So let's see an example. Let's say that we want to run  mongo 
+in a container. So we go to the documentation of the image and we see that we need to configure a user and a password. Then
+we can run the command
+\begin{lstlisting}[language=bash, breaklines=true, breakatwhitespace=true]
+    docker run -d -p27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin --name mongo 
+\end{lstlisting}
+All in same line just that i put the command in different lines to make it more readable. So in this case we have configure our 
+docker, now on our code we can connect to the database with the user and the password that we configure. As the language that your are 
+using required. Because the configuration of the database is in the container and that container that we configure is up and running 
+as an application of the database in our local machine. Now we cant put our app into a container so let's see how we can do that 
+\subsection*{Application in a container}
+So first we need to create a file into our project that is called Dockerfile. This file will have the configuration of our 
+container.So the dockerfile is a file that contains the instructions to build a container. So let's see an example of a dockerfile
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    FROM node:14 // Here we indicate the image that we are going to use and with the version that we are going to use
+
+
+    RUN mkdir -p /home/app  // Here we create a directory in the container where we are going to put our source code of the app
+    
+
+    COPY . /home/app // Here we copy all the files of our project to the directory that we create in the container
+    
+    EXPOSE 3000 // Here we indicate the port that we are going to use to run our app and we expose it to the container
+
+    CMD ["node", "/home/app/app.js"] // Here we indicate the command that we are going to use to run our app
+
+\end{lstlisting}
+
+So now we have our dockerfile bur we can't run the container yet because containers can't have communication with each other.
+Of course they can have communication with the exterior by mapping ports. But we now have encapsulated our app into a container 
+and we have our database in another container. So how we can make that our app can communicate with the database? 
+We can usea internal network of docker. So between containers in the same network they can communicate with each other. Also we can 
+have as many networks as we want. So let's se how we can create a network and how we can put our containers in that network.
+we are going to use the dockerfile that we create before. So we save the dockerfile and we close it and now we run the next 
+command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker network ls 
+\end{lstlisting}
+
+This will retun a table with the networks that docker has configured. Now we are going to create a network. To do that we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker network create <network-name>
+\end{lstlisting}
+of course this will return the network id. In case we need to delete the network we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker network rm <network-name>
+\end{lstlisting}
+So now with the network created we can put our containers in that network. But first we need to edit our source code 
+an change the connection to the database. So we need to change the connection to the database to the name of the container. For example
+\begin {lstlisting}[breaklines=true, breakatwhitespace=true]
+    //before
+    mongoose.connect('mongodb://admin:admin@localhost:27017/miapp'); 
+    //after
+    mongoose.connect('mongodb://admin:admin@mongo:27017/miapp');
+\end{lstlisting}
+
+So now we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker build -t <name:tag> <app-route>
+\end{lstlisting}
+
+"docker build" is use to build a image based on a dockerfile. So as you see docker builde requires two parameters. 
+First is the name and the tag that we are want to put it and the second is the route of the app. That route we can 
+indicated with a dot if you are in the route of the app. You can check if the image was created with the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker images
+\end{lstlisting}
+ 
+and now we can give the container our network. To do that we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker create  -p3000:3000 --name <container-name> --network <network-name> <image-name> -e <Environment variables>
+\end{lstlisting}
+
+and to connect the container with another in same network we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker create -p27017:27017 --name <container-name> --network <network-name> <image-name:tag>
+\end{lstlisting}
+
+This section is more difficult to understand but it's very important to understand it. So if you didn't understand it you 
+can go to this link and see this video \url{https://www.youtube.com/watch?v=4Dko5W96WHg&t=3831s}. And now let's see the Docker 
+Compose 
+
 \section*{Docker Compose}
+Docker compose is a tool that allows you to optimize the process of creating and running containers. Because as you can see 
+all the commands that we saw before are very long and we need to run a lot of commands to run a container. So with docker compose
+we can run all the commands in one command. . First we need to create the file that need to be call docker-compose.yml.
+ And then we can put the next code in the file. So let's see an example of a docker-compose file
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    version: '3.1' // Here we indicate the version of the docker-compose file
+
+    services: // Here we indicate the services that we are going to use
+        mongo: // Here we indicate the name of the service
+            image: mongo // Here we indicate the image that we are going to use
+            ports: // Here we indicate the ports that we are going to use
+                - "27017:27017"
+            environment: // Here we indicate the environment variables that we are going to use
+                MONGO_INITDB_ROOT_USERNAME: admin
+                MONGO_INITDB_ROOT_PASSWORD: admin
+        app: // Here we indicate the name of the service
+            build: . // Here we indicate the route of the app 
+
+            ports: // Here we indicate the ports that we are going to use
+                - "3000:3000"
+            
+            links: 
+             - mongo
+        
+\end{lstlisting}
+
+and now we save the file and we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker-compose up
+\end{lstlisting}
+
+This will return the logs of the containers in real time. And to stop the containers you can press ctrl + c. 
+And now let's see if this create us a new image. To do that you can run the command 
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker images
+\end{lstlisting}
+and to see if this create us a new container. And now we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker ps -a 
+\end{lstlisting}
+ 
+and see that this create us a new containers and a new image. And both of this containers were created 
+in the command line that we run before. And if we want to re-run the containers we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker-compose up 
+\end{lstlisting} 
+and this will use the same containers that it created before. But what happen if we want to delete this containers and 
+the image in a fast way. Well we can run the command 
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker-compose down
+\end{lstlisting}
+
+Important thing that docker do is that when you run the command docker-compose up it will create a new image, a 
+new container and a new network because if you code two services docker thinks that you want to communicate them so it 
+creates the network, and with docker compose down it will delete the containers, the image and the network. So now let's continue 
+with the volumes.
 \section*{Volumes}
+So as you have seen when we run a container and we delete it we lose all the data that we have in the container. This is because
+when we create a container it has his own operating system and his own file system and into this file system is where all the data 
+is saved. So if we want to mantein all of our data we need the tool of volumes. So volumes part from the file system of the container, 
+so what this tool do is to mount that directory where de data is saved in the container moved to a directory in our local machine.
+So when you delete a container you don't lose the data. So there are three types of volumes 
+\begin{itemize}
+    \item Anonimous volumes: Thiis volume is where you only specify the route where you wanto to save the data in your local machine 
+    \item Host volumes: This the volume where you decide in which and where directory you want to save the data in your local machine
+    \item Named volumes: This volume is like the anonimous volume but you can reference this volume when you create a new container 
+\end{itemize}
+
+To star working with volumes we need to acces to the docker-compose file and add the next code
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    version: '3.1' 
+
+    services: 
+        mongo: 
+            image: mongo 
+            ports:
+                - "27017:27017"
+            environment: 
+                MONGO_INITDB_ROOT_USERNAME: admin
+                MONGO_INITDB_ROOT_PASSWORD: admin
+            volumes: // Here we indicate the volumes that we are going to use
+                -mongo-data:/data/db //Here we indicate the volume that we are going to use and indicate where the data is save in the container
+         
+        app:
+            build: . 
+
+            ports:
+                - "3000:3000"
+            
+            links: 
+             - mongo
+    volumnes: // Here we indicate the volumes 
+        mongo-data: // Here we indicate the name of the volume
+\end{lstlisting}
+
+now we saved the file and we can run the command
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker-compose up
+\end{lstlisting}
+
+and check if the app is working properly. And that's how we can delete containers and create new containers and  don't lose the data.
+          
 \section*{Environments and Hot Reload}
 
+Now we are going to learn how to configure differents environment with docker. Because we don't have the same environment in development 
+than in production. So we need to create a docker file for development and another for production. So let's see how we can do that. 
+
+So you for production you can use the same docker file that we saw before. But for development you can use the next docker file
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+   Dockerfile.dev
+\end{lstlisting}
+
+so now we can star editing this docker file. So first we are goint to recycle the code that we have in 
+our dockerfile of production. So let's see an example of a docker file for development
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    FROM node:14 
+
+    RUN npm i -g nodemon // Here we install this tool to detected the changes in the code 
+
+    RUN mkdir -p /home/app  
+    
+    WORKDIR /home/app // Here we indicate the directory where we are going to work
+
+    
+    EXPOSE 3000 
+
+    CMD ["nodemon", "app.js"]
+
+\end{lstlisting}
+
+So the changes that we made were install nodemon to detected the changes in the code, specify the directory where we are 
+going to work on and delete the copy of the files of the project because we will work with volumes. After all that we change 
+the command to run the app and delete the route of where the files are, because we specify the directory where we are going 
+to work on with the "WORKDIR" instruction. After that we save the file and create a new docker-compose file. This file will 
+be called 
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker-compose.dev.yml
+\end{lstlisting}
+
+and now we start editing the code. So we copy the code of the docker-compose file of production and paste it 
+in the docker-compose file of development. That because we are going to use it as a template. So let's see an example of our 
+docker-compose file of development
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    version: '3.1' 
+
+    services: 
+        mongo: 
+            image: mongo 
+            ports:
+                - "27017:27017"
+            environment: 
+                MONGO_INITDB_ROOT_USERNAME: admin
+                MONGO_INITDB_ROOT_PASSWORD: admin
+            volumes: 
+                -mongo-data:/data/db 
+         
+        app:
+            build: 
+                context: . // Here we indicate the context of the build or where is the app 
+                dockerfile: Dockerfile.dev // Here we indicate the docker file that we are going to use
+            ports:
+                - "3000:3000"
+            volumes: 
+                - .:/home/app // Here we indicate the volume that we are going to use, this volume is anonimous
+            links: 
+             - mongo
+    volumnes: 
+        mongo-data:
+\end{lstlisting}
+ 
+So the changes that we made were to indicate the context of the build or where is the app and indicate the docker file that we are going to use. Also indicate the volumen 
+that we are going to use and in this case we use an anonimous volume. After that we save the file and can run the command 
+\begin{lstlisting}[breaklines=true, breakatwhitespace=true]
+    docker-compose -f docker-compose.dev.yml up
+\end{lstlisting}
+
+so as you can see we use the flag -f to indicate the file that we are going to use. And now we can check if the app is working properly. 
 
 \section*{Conclusion}
+
+So we fanally finish the docker documentation. I hope that you understand all the concepts that we saw in this documentation. If some of the concepts you didn't 
+understand you can go to this link and see this video \url{https://www.youtube.com/watch?v=4Dko5W96WHg&t=3831s}. And now you can start working with docker 
+
+\begin{itemize}
+    \item Email: \texttt{aleleonmarin01@gmail.com}
+    \item LinkedIn: \texttt{Alejandro Leon Marin}
+    \item Discord: \texttt{LionKing\#6730}
+    \item Twitter: \texttt{@aleleonmarin}
+    \item Instagram: \texttt{@\_ale.leon.marin\_}
+    \item Facebook: \texttt{Alejandro Leon Marin}
+    \item Github: \texttt{aleleonmarin}
+\end{itemize}
+
 
 
 
